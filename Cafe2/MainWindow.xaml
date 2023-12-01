@@ -1,0 +1,47 @@
+﻿<Window x:Class="Cafe2.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Cafe2"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Background="#145799">
+
+        <Border x:Name="LoginWin" Visibility="Visible" BorderThickness="2" BorderBrush="#4DAA4F" Margin="5" Width="550" Height="300">
+            <StackPanel Background="#0F4070">
+                <Grid HorizontalAlignment="Center" Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Row="0" Grid.Column="1" Content="Авторизация" Foreground="White" FontSize="25" FontWeight="Bold" Margin="0,0,0,15"></Label>
+                    <Border BorderThickness="3" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" BorderBrush="#4DAA4F" Width="300" Margin="5">
+                        <TextBox Text="Логин" x:Name="strLogin" Foreground="White" Background="#145799" FontSize="25" FontWeight="Bold"/>
+                    </Border>
+                    <Border BorderThickness="3" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" BorderBrush="#4DAA4F" Width="300" Margin="5">
+                        <TextBox Text="Пароль" x:Name="strPassword" Foreground="White" Background="#145799" FontSize="25" FontWeight="Bold"/>
+                    </Border>
+
+                    <Label x:Name="InfoLabel" Grid.Row="3" Grid.Column="1" Content="Что то" HorizontalAlignment="Center" FontSize="15"/>
+
+                    <Border Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="4" BorderThickness="3" BorderBrush="#4DAA4F" Margin="5"  Width="300">
+                        <Button Content="Войти" FontSize="25" Background="#145799" FontWeight="Bold" Foreground="White" Click="Button_Click"/>
+                    </Border>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <StackPanel x:Name="AdminPanel">
+
+        </StackPanel>
+    </Grid>
+</Window>
