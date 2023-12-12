@@ -40,8 +40,44 @@
             </StackPanel>
         </Border>
 
-        <StackPanel x:Name="AdminPanel">
+        <StackPanel x:Name="AdminPanel" Visibility="Visible"> <!-- Окно Администратора -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/> <!-- Кнопка регистрации пользователй -->
+                    <ColumnDefinition Width="230"/> <!-- Редактировать пользователя -->
+                    <ColumnDefinition/> <!-- Настройка зала -->
+                    <ColumnDefinition Width="140"/> <!-- Отчёты -->
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
 
+                <Button Content="Регистрация" FontSize="24" Margin="5" Grid.Column="0" Grid.Row="0" Click="Button_Click_1"/>
+                <Button Content="Ред.Пользователь" FontSize="24" Margin="5" Grid.Column="1" Grid.Row="0"/>
+                <Button Content="Настройки зала" FontSize="24" Margin="5" Grid.Column="2" Grid.Row="0"/>
+                <Button Content="Отчёты" FontSize="24" Margin="5" Grid.Column="3" Grid.Row="0"/>
+                <Button x:Name="back" Content="Назад" FontSize="24" Margin="5" Grid.Column="4" Grid.Row="0" Visibility="Visible" Click="back_Click"/>
+
+                <DataGrid x:Name="ListOrders" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Visible" AutoGenerateColumns="False" SelectionChanged="ListOrders_SelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Номер столика" Binding="{Binding TableNumber}" />
+                        <DataGridTextColumn Header="Заказ от" Binding="{Binding DateOrder}" />
+                        <DataGridTextColumn Header="Стасус готовности" Binding="{Binding IdReadyStatus}" />
+                        <DataGridTextColumn Header="Стасус оплаты" Binding="{Binding IdPaymentStatus}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+                <DataGrid x:Name="DeatailOrder" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Hidden" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="ID блюда" Binding="{Binding DishID}" />
+                        <DataGridTextColumn Header="Название блюда" Binding="{Binding DishName}" />
+                        <DataGridTextColumn Header="Количество" Binding="{Binding DishCount}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
         </StackPanel>
     </Grid>
 </Window>

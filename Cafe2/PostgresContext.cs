@@ -144,7 +144,7 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.Idorder)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("IDOrder");
-            entity.Property(e => e.IddetailOrderId).HasColumnName("IDDetailOrderId");
+           // entity.Property(e => e.IddetailOrderId).HasColumnName("IDDetailOrderId");
             entity.Property(e => e.IdpaymentMethod).HasColumnName("IDPaymentMethod");
             entity.Property(e => e.IdpaymentStatus).HasColumnName("IDPaymentStatus");
             entity.Property(e => e.IdreadyStatus).HasColumnName("IDReadyStatus");

@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Cafe2.Models;
+using System.Windows.Documents;
 
 namespace Cafe2.Functions
 {
@@ -16,10 +17,11 @@ namespace Cafe2.Functions
         }
 
         // Метод для аутентификации пользователя
-        public bool AuthenticateUser(string login, string password)
+        public object AuthenticateUser(string login, string password)
         {
             // Для проверки наличия пользователя в базе данных
-            return _dbContext.Users.Any(u => u.Login == login && u.Password == password);
+
+            return _dbContext.Users.FirstOrDefault(u => u.Login == login && u.Password == password);
         }
     }
 }

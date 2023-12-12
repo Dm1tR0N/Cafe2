@@ -9,9 +9,9 @@ public partial class Order
 
     public int IdtableNumber { get; set; }
 
-    public int IddetailOrderId { get; set; }
+    //public int IddetailOrderId { get; set; }
 
-    public DateOnly DateOrder { get; set; }
+    public DateTime DateOrder { get; set; }
 
     public int IdreadyStatus { get; set; }
 
