@@ -40,7 +40,7 @@
             </StackPanel>
         </Border>
 
-        <StackPanel x:Name="AdminPanel" Visibility="Visible"> <!-- Окно Администратора -->
+        <StackPanel x:Name="AdminPanel" Visibility="Hidden"> <!-- Окно Администратора -->
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -56,13 +56,13 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
-                <Button Content="Регистрация" FontSize="24" Margin="5" Grid.Column="0" Grid.Row="0" Click="Button_Click_1"/>
-                <Button Content="Ред.Пользователь" FontSize="24" Margin="5" Grid.Column="1" Grid.Row="0"/>
+                <Button Content="Регистрация" FontSize="24" Margin="5" Grid.Column="0" Grid.Row="0" Click="Reg_btn"/>
+                <Button Content="Ред.Пользователь" FontSize="24" Margin="5" Grid.Column="1" Grid.Row="0" Click="editUserDate"/>
                 <Button Content="Настройки зала" FontSize="24" Margin="5" Grid.Column="2" Grid.Row="0"/>
                 <Button Content="Отчёты" FontSize="24" Margin="5" Grid.Column="3" Grid.Row="0"/>
                 <Button x:Name="back" Content="Назад" FontSize="24" Margin="5" Grid.Column="4" Grid.Row="0" Visibility="Visible" Click="back_Click"/>
 
-                <DataGrid x:Name="ListOrders" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Visible" AutoGenerateColumns="False" SelectionChanged="ListOrders_SelectionChanged">
+                <DataGrid x:Name="ListOrders" Height="320" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Visible" AutoGenerateColumns="False" SelectionChanged="ListOrders_SelectionChanged">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Номер столика" Binding="{Binding TableNumber}" />
                         <DataGridTextColumn Header="Заказ от" Binding="{Binding DateOrder}" />
@@ -70,13 +70,367 @@
                         <DataGridTextColumn Header="Стасус оплаты" Binding="{Binding IdPaymentStatus}" />
                     </DataGrid.Columns>
                 </DataGrid>
-                <DataGrid x:Name="DeatailOrder" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Hidden" AutoGenerateColumns="False">
+                <DataGrid x:Name="DeatailOrder" ItemsSource="{Binding orderDetails}" Grid.Row="1" Height="320" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Hidden" AutoGenerateColumns="False">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="ID блюда" Binding="{Binding DishID}" />
                         <DataGridTextColumn Header="Название блюда" Binding="{Binding DishName}" />
                         <DataGridTextColumn Header="Количество" Binding="{Binding DishCount}" />
                     </DataGrid.Columns>
                 </DataGrid>
+                <Label x:Name="innfoOrder" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="6" Content="Цена заказа: "  Foreground="White" FontSize="25" FontWeight="Bold"/>
+            </Grid>
+        </StackPanel>
+
+        <StackPanel x:Name="RegWindow" Visibility="Hidden" Width="600" Background="#264EC4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Label Content="Регистрация пользователя"  Foreground="White" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+                <Label
+                    Content="Имя"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="1"
+                    />
+
+                <TextBox
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="2"
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    x:Name="firstName_User"
+                    />
+
+                <Label
+                    Content="Фамилия"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="2"
+                    />
+
+                <TextBox
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="2"
+                    FontSize="20" 
+                    FontWeight="Bold"
+                     x:Name="lasttName_User"
+                    />
+
+                <Label
+                    Content="Отчество"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="3"
+                    />
+
+                <TextBox
+                    Grid.Row="3"
+                    Grid.Column="2"
+                    Margin="2"
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    x:Name="middleName_User"
+                    />
+
+                <Label
+                    Content="Логин"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="4"
+                    />
+
+                <TextBox
+                    Grid.Row="4"
+                    Grid.Column="2"
+                    Margin="2"
+                    FontSize="20" 
+                    FontWeight="Bold"
+                     x:Name="login_User"
+                    />
+
+                <Label
+                    Content="Пароль"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="5"
+                    />
+
+                <PasswordBox
+                    Grid.Row="5"
+                    Grid.Column="2"
+                    Margin="2"
+                    FontSize="20" 
+                    FontWeight="Bold"
+                     x:Name="password_User"
+                    />
+
+                <Label
+                    Content="Фотография сотрудника"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="6"
+                    />
+
+                <Button
+                    Content="Выбрать"  
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="1"
+                    Grid.Row="6"
+                    Click="view_photo_employee"
+                    />
+
+                <Label
+                    Content="Скан договора"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="7"          
+                    />
+
+                <Button
+                    Content="Выбрать"  
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="1"
+                    Grid.Row="7"
+                    Click="view_photo_contract"
+                    />
+
+                <Label
+                    Content="Роль сотрудника"  
+                    Foreground="White" 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="8"          
+                    />
+
+                <ComboBox 
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="1"
+                    Grid.Row="8"
+                    x:Name="groupList_User"
+                    />
+
+                <Button
+                    Content="Создать"  
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="0"
+                    Grid.Row="10"
+                    Click="create_user_btn"
+                    />
+
+                <Button
+                    Content="Отмена"  
+                    FontSize="20" 
+                    FontWeight="Bold"
+                    Grid.Column="1"
+                    Grid.Row="10"
+                    Click="Back_adm_click"
+                    />
+
+            </Grid>
+        </StackPanel>
+
+        <StackPanel x:Name="editUserWindow" Visibility="Hidden" Width="600" Background="#264EC4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Label Content="Редактировние пользователей"  Foreground="White" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+                <StackPanel x:Name="SelectEmployeeWindow" Visibility="Visible" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Label
+                            Content="Выберите сотрудника"  
+                            Foreground="White"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            />
+                        <ComboBox
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            x:Name="ListEmployees_EditUser"
+                            />
+                        <Button
+                            Content="Редактировать пользователя"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3" Click="Button_Click_1"
+                            />  
+                    </Grid>
+                </StackPanel>
+                <StackPanel x:Name="EditUserWindow" Visibility="Hidden" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Label
+                            Content="Имя"  
+                            Foreground="White"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            />
+
+                        <TextBox
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            x:Name="editUserFirstName"
+                            />
+
+                        <Label
+                            Content="Фамилия"  
+                            Foreground="White"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            />
+
+                        <TextBox
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            x:Name="editUserSecondName"
+                            />
+
+                        <Label
+                            Content="Отчество"  
+                            Foreground="White"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            />
+
+                        <TextBox
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            x:Name="editUserMiddleName"
+                            />
+
+                        <Label
+                            Content="Статус"  
+                            Foreground="White"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="4"
+                            Grid.Column="0"
+                            x:Name="StatusNameEdit"
+                            />
+
+                        <ComboBox
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            x:Name="listStatusUser"
+                            />
+
+                        <Image
+                            Grid.Row="5"
+                            Grid.Column="0"
+                            Width="128"
+                            Height="128"
+                            x:Name="imageEmployee"
+                            />
+
+                        <Button
+                            Content="Отмена"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="6"
+                            Grid.Column="0"
+                            Click="cancelEditWindow"
+                            />
+
+                        <Button
+                            Content="Сохранить"
+                            FontSize="20" 
+                            FontWeight="Bold" 
+                            Grid.Row="6"
+                            Grid.Column="1"
+                            Click="saveEditUser"
+                            />
+
+                    </Grid>
+                </StackPanel>
             </Grid>
         </StackPanel>
     </Grid>

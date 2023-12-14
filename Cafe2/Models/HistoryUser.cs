@@ -11,7 +11,7 @@ public partial class HistoryUser
 
     public int Status { get; set; }
 
-    public DateOnly Date { get; set; }
+    public DateTime Date { get; set; }
 
     public virtual User IduserNavigation { get; set; } = null!;
 
