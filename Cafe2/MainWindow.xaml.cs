@@ -11,6 +11,7 @@ using Microsoft.Win32;
 using System.Windows.Media.Imaging;
 using System.IO;
 using System.Collections.ObjectModel;
+using System.Globalization;
 
 namespace Cafe2
 {
@@ -42,6 +43,8 @@ namespace Cafe2
             public string DishName { get; set; }
             public int DishCount { get; set; }
         }
+        
+        public static int ordersId { get; set; }
 
         public static byte[] photoEmployee { get; set; }
         public static byte[] photoContract { get; set; }
@@ -77,7 +80,7 @@ namespace Cafe2
                     if (user.Idgroup == 1)
                     {
                         // Пользователь успешно аутентифицирован
-                        InfoLabel.Content = $"Добро пожаловать!";
+                        //InfoLabel.Content = $"Добро пожаловать!";
                         LoginWin.Visibility = Visibility.Hidden;
                         AdminPanel.Visibility = Visibility.Visible;
 
@@ -103,22 +106,22 @@ namespace Cafe2
                     }
                     else if (user.Idgroup == 2)
                     {
-                        InfoLabel.Content = "Добро пожаловать Оффициант";
+                        //InfoLabel.Content = "Добро пожаловать Оффициант";
                     }
                     else if (user.Idgroup == 3)
                     {
-                        InfoLabel.Content = "Добро пожаловать Повар";
+                        //InfoLabel.Content = "Добро пожаловать Повар";
                     }
                     else if (user == null)
                     {
-                        InfoLabel.Content = "пользователь не найден!";
+                        //InfoLabel.Content = "пользователь не найден!";
                         strLogin.Text = "";
                         strPassword.Text = "";
                     }
                     else
                     {
                         // Неверные учетные данные
-                        InfoLabel.Content = "Неверный логин или пароль.";
+                        //InfoLabel.Content = "Неверный логин или пароль.";
                         strLogin.Text = "";
                         strPassword.Text = "";
                     }
@@ -140,6 +143,7 @@ namespace Cafe2
 
         private void ShowOrderDetails(int orderId)
         {
+            ordersId = orderId;
             using (var dbContext = new PostgresContext())
             {
                 // Здесь выполняете запрос для получения деталей заказа по orderId
@@ -177,9 +181,19 @@ namespace Cafe2
 
                 var statusReady = dbContext.PymentStatuses.FirstOrDefault(o => o.IdpymentStatus == idorder.IdpaymentStatus);
 
-                innfoOrder.Content = $"Итогыйвый чек заказа: {price} рублей, Статус оплаты: {statusReady.Name}";
+                innfoOrder.Content = $"Итогыйвый чек заказа: {price} рублей, \nСтатус оплаты: {statusReady.Name}";
+
+                if (statusReady.IdpymentStatus == 2)
+                {
+                    AddOrderPanel.Visibility = Visibility.Visible;
+                    btnSave.Visibility = Visibility.Visible;
+                }
+
+                var menuList = dbContext.Menus.ToList();
+                listMenuAdd.ItemsSource = menuList.Select(x => x.NameDish);
 
                 // Отображаем DeatailOrder и скрываем ListOrders
+                DeatailOrder_Loaded_Height();
                 ListOrders.Visibility = Visibility.Hidden;
                 DeatailOrder.Visibility = Visibility.Visible;
             }
@@ -189,6 +203,10 @@ namespace Cafe2
         {
             ListOrders.Visibility = Visibility.Visible;
             DeatailOrder.Visibility = Visibility.Hidden;
+
+            AddOrderPanel.Visibility = Visibility.Hidden;
+            btnSave.Visibility = Visibility.Hidden;
+
             innfoOrder.Content = $"Итогыйвый чек заказа: 0 рублей";
         }
 
@@ -460,5 +478,162 @@ namespace Cafe2
 
         }
 
+        public void DeatailOrder_Loaded_Height()
+        {
+            // Рассчитываем высоту на основе числа строк
+            int rowCount = DeatailOrder.Items.Count;
+
+            // Задаем высоту
+            double rowHeight = 30; // Замените на фактическую высоту строки
+            double desiredHeight = Math.Min(rowCount * rowHeight, SystemParameters.PrimaryScreenHeight); // Ограничиваем высоту экрана, чтобы избежать неудобств
+
+            DeatailOrder.MaxHeight = desiredHeight;
+        }
+
+        private void addCountOrder(object sender, RoutedEventArgs e)
+        {
+            int num = Convert.ToInt32(CountOrderItem.Text);
+            if (num != 5)
+            {
+                num += 1;
+                CountOrderItem.Text = Convert.ToString(num);
+            }
+        }
+
+        private void munusCountOrder(object sender, RoutedEventArgs e)
+        {
+            int num = Convert.ToInt32(CountOrderItem.Text);
+            if (num != 1)
+            {
+                num -= 1;
+                CountOrderItem.Text = Convert.ToString(num);
+            }
+        }
+
+        private void AddDishInOrder(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                using (var dbContext = new PostgresContext())
+                {
+                    var dishes = dbContext.Menus
+                        .FirstOrDefault(x => x.NameDish == listMenuAdd.Text);
+                    DishInOrder dishInOrder = new DishInOrder();
+
+                    DishInOrder newString = new DishInOrder()
+                    {
+                        Idorder = ordersId,
+                        Iddish = dishes.Iddish,
+                        Count = Convert.ToInt32(CountOrderItem.Text)
+                    };
+                    dbContext.DishInOrders.Add(newString);
+                    dbContext.SaveChanges();
+                }
+                ShowOrderDetails(ordersId);
+                MessageBox.Show($"Товар {listMenuAdd.Text} добавен к заказу!", "Добавлен");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{ex.Message}", "Ошибка");
+            }
+        }
+
+        private void settingsBtn_addWorksShift_Click(object sender, RoutedEventArgs e)
+        {
+            using(var dbContext = new PostgresContext())
+            {
+                TypeWorksShift typeWorksShift = new TypeWorksShift();
+
+                // Получаем выбранную дату из DatePicker
+                DateTime dateWorkStart = settingsBtn_dateWorking.SelectedDate ?? DateTime.UtcNow;
+                DateTime dateWorkEnd = settingsBtn_dateWorking.SelectedDate ?? DateTime.UtcNow;
+
+                // Получаем выбранное время из ComboBox
+                string startHour = settingsBtn_startDate.Text;
+                string endHour = settingsBtn_endDate.Text;
+
+                // Разбираем строку времени и добавляем к дате
+                if (DateTime.TryParseExact(startHour, "H:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedTime))
+                {
+                    dateWorkStart = dateWorkStart.AddHours(parsedTime.Hour).AddMinutes(parsedTime.Minute).ToUniversalTime();
+                }
+
+                if (DateTime.TryParseExact(endHour, "H:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedTime1))
+                {
+                    dateWorkEnd = dateWorkEnd.AddHours(parsedTime1.Hour).AddMinutes(parsedTime1.Minute).ToUniversalTime();
+                }
+
+                TypeWorksShift newType = new TypeWorksShift() 
+                {
+                    Start = dateWorkStart,
+                    End = dateWorkEnd,
+                    WorkingRate = Convert.ToDecimal(settingsBtn_WorkingRate.Text)
+                };
+                dbContext.TypeWorksShifts.Add(newType);
+                dbContext.SaveChanges();
+                MessageBox.Show($"Добавленная новая смена:\nНачало - {dateWorkStart}\nКонец - {dateWorkEnd}\nСтавка - {settingsBtn_WorkingRate.Text}", "Успешная операция");
+
+                settingsBtn_dateWorking.SelectedDate = null;
+                settingsBtn_startDate.Text = null;
+                settingsBtn_endDate.Text = null;
+                settingsBtn_WorkingRate = null;
+            };
+        }
+
+        private void setEmpToTable(object sender, RoutedEventArgs e)
+        {
+            using(var dbContext = new PostgresContext())
+            {
+                WorkersShift workersShift = new WorkersShift();
+
+                WorkersShift newString = new WorkersShift() 
+                {
+                    // Дописать логику!
+                };
+            };
+        }
+
+        private void openSettingsWindow(object sender, RoutedEventArgs e)
+        {
+            //try
+            //{
+            using (var dbContext = new PostgresContext())
+            {
+                AdminPanel.Visibility = Visibility.Hidden;
+                settingsBtn.Visibility = Visibility.Visible;
+
+                setEmptoWorkShifr_WorkShift.ItemsSource = dbContext.TypeWorksShifts
+                 .Select(x => $"{ConvertTimeWithoutTimeZone(Convert.ToString(x.Start))} - {ConvertTimeWithoutTimeZone(Convert.ToString(x.End))}: {x.WorkingRate}")
+                 .ToList();
+
+                setEmptoWorkShifr_Employee.ItemsSource = dbContext.Users
+                    .Select(x => $"{x.SecondName} {x.FirstName} {x.MiddleName}")
+                    .ToList();
+
+                //}
+                //catch (Exception ex)
+                //{
+                //    // Обработайте ошибку, например, выведите ее в консоль или воспользуйтесь MessageBox
+                //    MessageBox.Show($"Произошла ошибка: {ex.Message}", "Ошибка");
+                //}
+            }
+        }
+
+        public static DateTime ConvertTimeWithoutTimeZone(string timeWithoutTimeZone)
+        {
+            DateTime resultDateTime;
+
+            if (DateTime.TryParse(timeWithoutTimeZone, out resultDateTime))
+            {
+                // Если формат строки правильный, то возвращаем преобразованный объект DateTime
+                return resultDateTime;
+            }
+            else
+            {
+                // Если формат строки неправильный, можно обработать ошибку или вернуть значение по умолчанию
+                Console.WriteLine("Неверный формат времени.");
+                return DateTime.MinValue;
+            }
+        }
     }
 }
