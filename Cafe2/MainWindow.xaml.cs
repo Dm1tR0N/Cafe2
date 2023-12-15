@@ -12,6 +12,15 @@ using System.Windows.Media.Imaging;
 using System.IO;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
+using static Cafe2.MainWindow;
+using System.Text;
+using System.Windows.Xps.Packaging;
+using PdfSharpCore.Drawing;
+using PdfSharpCore.Pdf;
+using PdfSharpCore.Fonts;
+using PdfSharpCore.Utils;
 
 namespace Cafe2
 {
@@ -43,7 +52,26 @@ namespace Cafe2
             public string DishName { get; set; }
             public int DishCount { get; set; }
         }
-        
+
+        public class OrderReport
+        {
+            public DateTime DateOrder { get; set; }
+            public string TableName { get; set; }
+            public string ReadyStatus { get; set; }
+            public string PaymentStatus { get; set; }
+            public string PaymentMethod { get; set; }
+            public List<DishReport> Dishes { get; set; }
+            public decimal TotalOrderPrice { get; set; }
+        }
+
+        public class DishReport
+        {
+            public string NameDish { get; set; }
+            public int Count { get; set; }
+            public decimal DishPrice { get; set; }
+            public decimal TotalDishPrice { get; set; }
+        }
+
         public static int ordersId { get; set; }
 
         public static byte[] photoEmployee { get; set; }
@@ -51,12 +79,16 @@ namespace Cafe2
 
         public static User selectEditUser { get; set; }
 
+        public static List<OrderReport> orderReports { get; set; }
+        public static List<OrderReport> orderReportsPaid { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
 
             _dbContext = new PostgresContext();
             GetGroupsList();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         }
         public void GetGroupsList()
         {
@@ -186,7 +218,6 @@ namespace Cafe2
                 if (statusReady.IdpymentStatus == 2)
                 {
                     AddOrderPanel.Visibility = Visibility.Visible;
-                    btnSave.Visibility = Visibility.Visible;
                 }
 
                 var menuList = dbContext.Menus.ToList();
@@ -205,7 +236,6 @@ namespace Cafe2
             DeatailOrder.Visibility = Visibility.Hidden;
 
             AddOrderPanel.Visibility = Visibility.Hidden;
-            btnSave.Visibility = Visibility.Hidden;
 
             innfoOrder.Content = $"Итогыйвый чек заказа: 0 рублей";
         }
@@ -353,7 +383,7 @@ namespace Cafe2
             }
         }
 
-        public static Image ByteArrayToImage(byte[] imageBytes)
+        public static System.Windows.Controls.Image ByteArrayToImage(byte[] imageBytes)
         {
             // Создаем объект BitmapImage
             BitmapImage bitmapImage = new BitmapImage();
@@ -362,7 +392,7 @@ namespace Cafe2
             bitmapImage.EndInit();
 
             // Создаем объект Image
-            Image imageControl = new Image();
+            System.Windows.Controls.Image imageControl = new System.Windows.Controls.Image();
             imageControl.Source = bitmapImage;
 
             return imageControl;
@@ -545,8 +575,8 @@ namespace Cafe2
                 TypeWorksShift typeWorksShift = new TypeWorksShift();
 
                 // Получаем выбранную дату из DatePicker
-                DateTime dateWorkStart = settingsBtn_dateWorking.SelectedDate ?? DateTime.UtcNow;
-                DateTime dateWorkEnd = settingsBtn_dateWorking.SelectedDate ?? DateTime.UtcNow;
+                DateTime dateWorkStart = (settingsBtn_dateWorking.SelectedDate ?? DateTime.UtcNow).Date;
+                DateTime dateWorkEnd = (settingsBtn_dateWorking.SelectedDate ?? DateTime.UtcNow).Date;
 
                 // Получаем выбранное время из ComboBox
                 string startHour = settingsBtn_startDate.Text;
@@ -555,18 +585,21 @@ namespace Cafe2
                 // Разбираем строку времени и добавляем к дате
                 if (DateTime.TryParseExact(startHour, "H:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedTime))
                 {
-                    dateWorkStart = dateWorkStart.AddHours(parsedTime.Hour).AddMinutes(parsedTime.Minute).ToUniversalTime();
+                    // Преобразование к UTC и добавление времени
+                    dateWorkStart = dateWorkStart.Add(parsedTime.TimeOfDay);
                 }
 
                 if (DateTime.TryParseExact(endHour, "H:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedTime1))
                 {
-                    dateWorkEnd = dateWorkEnd.AddHours(parsedTime1.Hour).AddMinutes(parsedTime1.Minute).ToUniversalTime();
+                    // Преобразование к UTC и добавление времени
+                    dateWorkEnd = dateWorkEnd.Add(parsedTime1.TimeOfDay);
                 }
+
 
                 TypeWorksShift newType = new TypeWorksShift() 
                 {
-                    Start = dateWorkStart,
-                    End = dateWorkEnd,
+                    StartWorksShift = dateWorkStart.ToUniversalTime(),
+                    EndWorksShift = dateWorkEnd.ToUniversalTime(),
                     WorkingRate = Convert.ToDecimal(settingsBtn_WorkingRate.Text)
                 };
                 dbContext.TypeWorksShifts.Add(newType);
@@ -582,58 +615,499 @@ namespace Cafe2
 
         private void setEmpToTable(object sender, RoutedEventArgs e)
         {
-            using(var dbContext = new PostgresContext())
+            using (var dbContext = new PostgresContext())
             {
                 WorkersShift workersShift = new WorkersShift();
 
-                WorkersShift newString = new WorkersShift() 
+                // Получаем пользователя с помощью AsEnumerable(), чтобы выполнить операцию на стороне клиента
+                var idUser = dbContext.Users
+                    .AsEnumerable()
+                    .FirstOrDefault(x => $"{x.SecondName} {x.FirstName} {x.MiddleName}" == setEmptoWorkShifr_Employee.Text);
+
+                var idTypeWorkShift = dbContext.TypeWorksShifts
+                    .AsEnumerable()
+                    .FirstOrDefault(x => $"{x.StartWorksShift} - {x.EndWorksShift}: {x.WorkingRate}" == setEmptoWorkShifr_WorkShift.Text);
+
+                if (idUser != null && idTypeWorkShift != null && idTypeWorkShift.StartWorksShift > DateTime.UtcNow)
                 {
-                    // Дописать логику!
-                };
-            };
+                    WorkersShift newString = new WorkersShift()
+                    {
+                        Iduser = idUser.Iduser,
+                        IdtypeWorkShift = idTypeWorkShift.IdtypeWorksShift
+                    };
+                    dbContext.WorkersShifts.Add(newString);
+                    dbContext.SaveChanges();
+                }
+                else if (idUser == null)
+                {
+                    MessageBox.Show("Пользователь не найден.", "Ошибка!");
+                }
+                else if (idTypeWorkShift == null)
+                {
+                    MessageBox.Show("Тип рабочей смены не найден.", "Ошибка!");
+                }
+                else
+                {
+                    MessageBox.Show("Эту смену нельзя выбрать!\nСмена просрочена", "Ошибка!");
+                }
+            }
+
         }
 
         private void openSettingsWindow(object sender, RoutedEventArgs e)
         {
-            //try
-            //{
-            using (var dbContext = new PostgresContext())
+            try
             {
-                AdminPanel.Visibility = Visibility.Hidden;
-                settingsBtn.Visibility = Visibility.Visible;
+                using (var dbContext = new PostgresContext())
+                {
+                    AdminPanel.Visibility = Visibility.Hidden;
+                    settingsBtn.Visibility = Visibility.Visible;
 
-                setEmptoWorkShifr_WorkShift.ItemsSource = dbContext.TypeWorksShifts
-                 .Select(x => $"{ConvertTimeWithoutTimeZone(Convert.ToString(x.Start))} - {ConvertTimeWithoutTimeZone(Convert.ToString(x.End))}: {x.WorkingRate}")
-                 .ToList();
+                    setEmptoWorkShifr_WorkShift.ItemsSource = dbContext.TypeWorksShifts
+                        .Select(x => $"{x.StartWorksShift} - {x.EndWorksShift}: {x.WorkingRate}")
+                        .ToList();
 
-                setEmptoWorkShifr_Employee.ItemsSource = dbContext.Users
-                    .Select(x => $"{x.SecondName} {x.FirstName} {x.MiddleName}")
+                    setEmptoWorkShifr_Employee.ItemsSource = dbContext.Users
+                        .Select(x => $"{x.SecondName} {x.FirstName} {x.MiddleName}")
+                        .ToList();
+
+                    adddEmpToTable_ListEmp.ItemsSource = dbContext.Users
+                        .Select(x => $"{x.SecondName} {x.FirstName} {x.MiddleName}")
+                        .ToList();
+
+                    adddEmpToTable_ListTables.ItemsSource = dbContext.Tables
+                        .Select(x => x.NameTable)
+                        .ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Обработайте ошибку, например, выведите ее в консоль или воспользуйтесь MessageBox
+                MessageBox.Show($"Произошла ошибка: {ex.Message}", "Ошибка");
+            }
+        }
+
+        private void adddEmpToTable_SetEmpToTable(object sender, RoutedEventArgs e)
+        {
+           using(var dbContext = new PostgresContext())
+           {
+                Table table = new Table();
+
+                var idUser = dbContext.Users
+                   .AsEnumerable()
+                   .FirstOrDefault(x => $"{x.SecondName} {x.FirstName} {x.MiddleName}" == adddEmpToTable_ListEmp.Text);
+
+                var idTable = dbContext.Tables
+                    .AsEnumerable()
+                    .FirstOrDefault(x => x.NameTable == adddEmpToTable_ListTables.Text);
+
+                if ( idTable.UserTableId == null) 
+                {
+                    idTable.UserTableId = idUser.Iduser;
+                    dbContext.SaveChanges();
+                    MessageBox.Show($"Теперь у {idTable.NameTable} назначен отвечающий\nЗа стол отвечает {idUser.SecondName} {idUser.FirstName} {idUser.MiddleName}", "Назначен!");
+                }
+                else if (idTable.UserTableId != null)
+                {
+                    var oldUser = dbContext.Users
+                        .FirstOrDefault(x => x.Iduser == idTable.UserTableId);
+                    MessageBox.Show($"У {idTable.NameTable} изменен оффициант!" +
+                        $"\nБыл: {oldUser.SecondName} {oldUser.FirstName} {oldUser.MiddleName}" +
+                        $"\nТеперь: {idUser.SecondName} {idUser.FirstName} {idUser.MiddleName}","Изменен оффициант!");
+                    idTable.UserTableId = idUser.Iduser;
+                    dbContext.SaveChanges();
+                }
+            };
+        }
+
+        private void settingsBtn_backBtn(object sender, RoutedEventArgs e)
+        {
+            AdminPanel.Visibility = Visibility.Visible;
+            settingsBtn.Visibility = Visibility.Hidden;
+        }
+
+        private void windowReports_backBtn(object sender, RoutedEventArgs e)
+        {
+            AdminPanel.Visibility = Visibility.Visible;
+            windowReports.Visibility = Visibility.Hidden;
+        }
+
+        private void openWindowWithReports(object sender, RoutedEventArgs e)
+        {
+            AdminPanel.Visibility = Visibility.Hidden;
+            windowReports.Visibility = Visibility.Visible;
+
+            using(var dbContext = new PostgresContext()) 
+            {
+                var ordersWithDetailsAndTotalPrice = dbContext.Orders
+                    .Include(order => order.DishInOrders)
+                        .ThenInclude(dishInOrder => dishInOrder.IddishNavigation)
+                    .Include(order => order.IdtableNumberNavigation)
+                    .Include(order => order.IdreadyStatusNavigation)
+                    .Include(order => order.IdpaymentStatusNavigation)
+                    .Include(order => order.IdpaymentMethodNavigation)
+                    .AsEnumerable() // Преобразуем IQueryable в IEnumerable
+                    .Select(order => new
+                    {
+                        DateOrder = order.DateOrder,
+                        TableName = order.IdtableNumberNavigation.NameTable,
+                        ReadyStatus = order.IdreadyStatusNavigation.Name,
+                        PaymentStatus = order.IdpaymentStatusNavigation.Name,
+                        PaymentMethod = order.IdpaymentMethodNavigation.Name,
+                        Dishes = order.DishInOrders.Select(dishInOrder => new
+                        {
+                            dishInOrder.IddishNavigation.NameDish,
+                            dishInOrder.Count,
+                            DishPrice = dishInOrder.IddishNavigation.Price,
+                            TotalDishPrice = dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price
+                        }).ToList(),
+                        TotalOrderPrice = order.DishInOrders.Sum(dishInOrder => dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price)
+                    })
                     .ToList();
 
-                //}
-                //catch (Exception ex)
-                //{
-                //    // Обработайте ошибку, например, выведите ее в консоль или воспользуйтесь MessageBox
-                //    MessageBox.Show($"Произошла ошибка: {ex.Message}", "Ошибка");
-                //}
-            }
+                reportOrders.ItemsSource = ordersWithDetailsAndTotalPrice;
+                orderReports = ordersWithDetailsAndTotalPrice
+                    .Select(order => new OrderReport
+                    {
+                        DateOrder = order.DateOrder,
+                        TableName = order.TableName,
+                        ReadyStatus = order.ReadyStatus,
+                        PaymentStatus = order.PaymentStatus,
+                        PaymentMethod = order.PaymentMethod,
+                        Dishes = order.Dishes.Select(dish => new DishReport
+                        {
+                            NameDish = dish.NameDish,
+                            Count = dish.Count,
+                            DishPrice = dish.DishPrice,
+                            TotalDishPrice = dish.TotalDishPrice
+                        }).ToList(),
+                        TotalOrderPrice = order.TotalOrderPrice
+                    })
+                    .ToList();
+
+                var paidOrders = dbContext.Orders
+                    .Include(order => order.DishInOrders)
+                        .ThenInclude(dishInOrder => dishInOrder.IddishNavigation)
+                    .Include(order => order.IdtableNumberNavigation)
+                    .Include(order => order.IdreadyStatusNavigation)
+                    .Include(order => order.IdpaymentStatusNavigation)
+                    .Include(order => order.IdpaymentMethodNavigation)
+                    .Where(order => order.IdpaymentStatus == 1)
+                    .AsEnumerable()
+                    .Select(order => new OrderReport
+                    {
+                        DateOrder = order.DateOrder,
+                        TableName = order.IdtableNumberNavigation.NameTable,
+                        ReadyStatus = order.IdreadyStatusNavigation.Name,
+                        PaymentStatus = order.IdpaymentStatusNavigation.Name,
+                        PaymentMethod = order.IdpaymentMethodNavigation.Name,
+                        Dishes = order.DishInOrders.Select(dishInOrder => new DishReport
+                        {
+                            NameDish = dishInOrder.IddishNavigation.NameDish,
+                            Count = dishInOrder.Count,
+                            DishPrice = dishInOrder.IddishNavigation.Price,
+                            TotalDishPrice = dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price
+                        }).ToList(),
+                        TotalOrderPrice = order.DishInOrders.Sum(dishInOrder => dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price)
+                    })
+                    .ToList();
+
+                reportOrdersTwo.ItemsSource = paidOrders;
+                orderReportsPaid = paidOrders;
+
+                // Рассчитываем итоговую стоимость всех заказов
+                decimal totalPaidAmount = paidOrders.Sum(order => order.TotalOrderPrice);
+
+                // Выводим итоговую стоимость в Label
+                totalPricePaid.Content = $"Итоговая стоимость всех заказов: {totalPaidAmount:C}";
+            };
         }
 
-        public static DateTime ConvertTimeWithoutTimeZone(string timeWithoutTimeZone)
+        private void exportReportOne(object sender, RoutedEventArgs e)
         {
-            DateTime resultDateTime;
+            ExportToExcel(orderReports);
+        }
 
-            if (DateTime.TryParse(timeWithoutTimeZone, out resultDateTime))
+        private void exportReportOne1(object sender, RoutedEventArgs e)
+        {
+            ExportToPdf(orderReports);
+        }
+
+        private void exportReportTwo(object sender, RoutedEventArgs e)
+        {
+            // Рассчитываем итоговую стоимость всех заказов
+            decimal totalPaidAmount = orderReportsPaid.Sum(order => order.TotalOrderPrice);
+            ExportToPdf(orderReportsPaid, totalPaidAmount);
+        }
+
+        private void exportReportTwo1(object sender, RoutedEventArgs e)
+        {
+            // Рассчитываем итоговую стоимость всех заказов
+            decimal totalPaidAmount = orderReportsPaid.Sum(order => order.TotalOrderPrice);
+            ExportToExcel(orderReportsPaid, totalPaidAmount);
+        }
+
+        private void ExportToExcel(List<OrderReport> data)
+        {
+            using (var package = new ExcelPackage())
             {
-                // Если формат строки правильный, то возвращаем преобразованный объект DateTime
-                return resultDateTime;
-            }
-            else
-            {
-                // Если формат строки неправильный, можно обработать ошибку или вернуть значение по умолчанию
-                Console.WriteLine("Неверный формат времени.");
-                return DateTime.MinValue;
+                var worksheet = package.Workbook.Worksheets.Add("Report");
+
+                // Заголовки столбцов
+                string[] headers = { "Дата", "Столик", "Статус готовности", "Статус оплаты", "Метод оплаты", "Блюда", "Итоговая стоимость" };
+
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cells[1, i + 1].Value = headers[i];
+                    worksheet.Cells[1, i + 1].Style.Font.Bold = true;
+                }
+
+                // Заполнение данными из списка OrderReport
+                for (int row = 0; row < data.Count; row++)
+                {
+                    worksheet.Cells[row + 2, 1].Value = data[row].DateOrder;
+                    worksheet.Cells[row + 2, 2].Value = data[row].TableName;
+                    worksheet.Cells[row + 2, 3].Value = data[row].ReadyStatus;
+                    worksheet.Cells[row + 2, 4].Value = data[row].PaymentStatus;
+                    worksheet.Cells[row + 2, 5].Value = data[row].PaymentMethod;
+
+                    // Заполнение данных для столбца "Блюда"
+                    var dishes = data[row].Dishes;
+                    StringBuilder dishesText = new StringBuilder();
+
+                    foreach (var dish in dishes)
+                    {
+                        dishesText.AppendLine($"{dish.NameDish} - {dish.Count},");
+                    }
+
+                    worksheet.Cells[row + 2, 6].Value = dishesText.ToString().TrimEnd();
+
+                    worksheet.Cells[row + 2, 7].Value = data[row].TotalOrderPrice;
+                }
+
+                var saveFileDialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Filter = "Excel Files|*.xlsx|All Files|*.*",
+                    DefaultExt = ".xlsx"
+                };
+
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    var file = new FileInfo(saveFileDialog.FileName);
+                    package.SaveAs(file);
+
+                    MessageBox.Show("Отчет успешно экспортирован в Excel!", "Экспорт завершен", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
         }
+
+        private void ExportToPdf(List<OrderReport> data)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "PDF Files|*.pdf|All Files|*.*",
+                Title = "Выберите место сохранения PDF-отчета"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                // Загружаем встроенные шрифты PdfSharpCore
+                GlobalFontSettings.FontResolver = new FontResolver();
+
+                using (var document = new PdfDocument())
+                {
+                    var page = document.AddPage();
+                    var graphics = XGraphics.FromPdfPage(page);
+                    var font = new XFont("Arial", 10, XFontStyle.Regular);
+
+                    var yPosition = 10;
+
+                    foreach (var order in data)
+                    {
+                        if (yPosition + 80 > page.Height)
+                        {
+                            page = document.AddPage();
+                            graphics = XGraphics.FromPdfPage(page);
+                            yPosition = 10;
+                        }
+
+                        graphics.DrawString($"Дата: {order.DateOrder.ToString("dd.MM.yyyy HH:mm:ss")}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Столик: {order.TableName}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Статус готовности: {order.ReadyStatus}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Статус оплаты: {order.PaymentStatus}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Метод оплаты: {order.PaymentMethod}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        var dishes = order.Dishes;
+                        StringBuilder dishesText = new StringBuilder();
+                        foreach (var dish in dishes)
+                        {
+                            dishesText.AppendLine($"{dish.NameDish} - {dish.Count}");
+                        }
+
+                        graphics.DrawString($"Блюда:\n{dishesText}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 20;
+
+                        graphics.DrawString($"Итоговая стоимость: {order.TotalOrderPrice:C}", font, XBrushes.Black, 10, yPosition);
+
+                        yPosition += 40;
+                    }
+
+                    document.Save(saveFileDialog.FileName);
+                    MessageBox.Show($"PDF-отчет успешно выгружен в {saveFileDialog.FileName}", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+        private void ExportToExcel(List<OrderReport> data, decimal totalPaidAmount)
+        {
+            // Создаем диалоговое окно для выбора места сохранения файла
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "Excel Files|*.xlsx|All Files|*.*",
+                Title = "Выберите место сохранения отчета"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                using (var package = new ExcelPackage())
+                {
+                    var worksheet = package.Workbook.Worksheets.Add("PaidOrdersReport");
+
+                    string[] headers = { "Дата", "Столик", "Статус готовности", "Статус оплаты", "Метод оплаты", "Блюда", "Итоговая стоимость" };
+
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        worksheet.Cells[1, i + 1].Value = headers[i];
+                        worksheet.Cells[1, i + 1].Style.Font.Bold = true;
+                    }
+
+                    for (int row = 0; row < data.Count; row++)
+                    {
+                        worksheet.Cells[row + 2, 1].Value = data[row].DateOrder;
+                        worksheet.Cells[row + 2, 2].Value = data[row].TableName;
+                        worksheet.Cells[row + 2, 3].Value = data[row].ReadyStatus;
+                        worksheet.Cells[row + 2, 4].Value = data[row].PaymentStatus;
+                        worksheet.Cells[row + 2, 5].Value = data[row].PaymentMethod;
+
+                        var dishes = data[row].Dishes;
+                        StringBuilder dishesText = new StringBuilder();
+
+                        foreach (var dish in dishes)
+                        {
+                            dishesText.AppendLine($"{dish.NameDish} - {dish.Count}");
+                        }
+
+                        worksheet.Cells[row + 2, 6].Value = dishesText.ToString().TrimEnd();
+
+                        worksheet.Cells[row + 2, 7].Value = data[row].TotalOrderPrice;
+                    }
+
+                    worksheet.Cells[data.Count + 2, 6].Value = "Итоговая стоимость всех заказов:";
+                    worksheet.Cells[data.Count + 2, 7].Value = totalPaidAmount;
+
+                    // Извлекаем директорию и имя файла из пути, выбранного пользователем
+                    var fileInfo = new FileInfo(saveFileDialog.FileName);
+
+                    // Добавляем дату в имя файла
+                    var fileNameWithDate = $"{fileInfo.DirectoryName}\\PaidOrdersReport_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                    // Сохраняем файл
+                    package.SaveAs(new FileInfo(fileNameWithDate));
+
+                    MessageBox.Show($"Отчет успешно выгружен в {fileNameWithDate}", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+        // Метод для выгрузки в PDF
+        private void ExportToPdf(List<OrderReport> data, decimal totalPaidAmount)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "PDF Files|*.pdf|All Files|*.*",
+                Title = "Выберите место сохранения PDF-отчета"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                // Загружаем встроенные шрифты PdfSharpCore
+                GlobalFontSettings.FontResolver = new FontResolver();
+
+                using (var document = new PdfDocument())
+                {
+                    // Создаем новую страницу
+                    var page = document.AddPage();
+                    var graphics = XGraphics.FromPdfPage(page);
+                    var font = new XFont("Arial", 10, XFontStyle.Regular);
+
+                    // Начинаем печать заголовков столбцов
+                    var yPosition = 10;
+
+                    // Для каждого заказа
+                    foreach (var order in data)
+                    {
+                        // Проверяем, помещается ли информация о заказе на текущей странице
+                        if (yPosition + 80 > page.Height) // 80 - примерная высота данных о заказе
+                        {
+                            // Если не помещается, создаем новую страницу
+                            page = document.AddPage();
+                            graphics = XGraphics.FromPdfPage(page);
+                            yPosition = 10; // Сбрасываем позицию на новой странице
+                        }
+
+                        graphics.DrawString($"Дата: {order.DateOrder.ToString("dd.MM.yyyy HH:mm:ss")}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Столик: {order.TableName}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Статус готовности: {order.ReadyStatus}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Статус оплаты: {order.PaymentStatus}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        graphics.DrawString($"Метод оплаты: {order.PaymentMethod}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 15;
+
+                        var dishes = order.Dishes;
+                        StringBuilder dishesText = new StringBuilder();
+                        foreach (var dish in dishes)
+                        {
+                            dishesText.AppendLine($"{dish.NameDish} - {dish.Count}");
+                        }
+
+                        graphics.DrawString($"Блюда:\n{dishesText}", font, XBrushes.Black, 10, yPosition);
+                        yPosition += 20;
+
+                        // После каждого заказа добавляем отступ
+                        yPosition += 40;
+                    }
+
+                    // Страница с итоговой стоимостью
+                    var totalPage = document.AddPage();
+                    var totalGraphics = XGraphics.FromPdfPage(totalPage);
+                    var totalFont = new XFont("Arial", 10, XFontStyle.Bold);
+
+                    var totalYPosition = 10;
+                    totalGraphics.DrawString($"Итоговая стоимость всех заказов: {totalPaidAmount:C}", totalFont, XBrushes.Black, 10, totalYPosition);
+
+                    // Сохраняем PDF-файл
+                    document.Save(saveFileDialog.FileName);
+                    MessageBox.Show($"PDF-отчет успешно выгружен в {saveFileDialog.FileName}", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+        }
+
+
     }
 }

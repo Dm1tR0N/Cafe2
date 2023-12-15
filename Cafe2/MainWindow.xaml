@@ -8,6 +8,7 @@
         Title="Кафе" Height="470" Width="800">
     <Grid Background="#145799">
 
+        <!--Авторизация-->
         <Border x:Name="LoginWin" Visibility="Visible" BorderThickness="2" BorderBrush="#4DAA4F" Margin="5" Width="550" Height="300">
             <StackPanel Background="#0F4070">
                 <Grid HorizontalAlignment="Center" Margin="0,20,0,0">
@@ -44,7 +45,9 @@
             </StackPanel>
         </Border>
 
-        <StackPanel x:Name="AdminPanel" Visibility="Hidden"> <!-- Окно Администратора -->
+        <!-- Окно Администратора -->
+
+        <StackPanel x:Name="AdminPanel" Visibility="Hidden">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition/>
@@ -53,17 +56,21 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/> <!-- Кнопка регистрации пользователй -->
-                    <ColumnDefinition Width="230"/> <!-- Редактировать пользователя -->
-                    <ColumnDefinition/> <!-- Настройка зала -->
-                    <ColumnDefinition Width="140"/> <!-- Отчёты -->
+                    <ColumnDefinition/>
+                    <!-- Кнопка регистрации пользователй -->
+                    <ColumnDefinition Width="230"/>
+                    <!-- Редактировать пользователя -->
+                    <ColumnDefinition/>
+                    <!-- Настройка зала -->
+                    <ColumnDefinition Width="140"/>
+                    <!-- Отчёты -->
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
                 <Button Content="Регистрация" FontSize="24" Margin="5" Grid.Column="0" Grid.Row="0" Click="Reg_btn"/>
                 <Button Content="Ред.Пользователь" FontSize="24" Margin="5" Grid.Column="1" Grid.Row="0" Click="editUserDate"/>
                 <Button Content="Настройки зала" FontSize="24" Margin="5" Grid.Column="2" Grid.Row="0" Click="openSettingsWindow"/>
-                <Button Content="Отчёты" FontSize="24" Margin="5" Grid.Column="3" Grid.Row="0"/>
+                <Button Content="Отчёты" FontSize="24" Margin="5" Grid.Column="3" Grid.Row="0" Click="openWindowWithReports"/>
                 <Button x:Name="back" Content="Назад" FontSize="24" Margin="5" Grid.Column="4" Grid.Row="0" Visibility="Visible" Click="back_Click"/>
 
                 <DataGrid x:Name="ListOrders" Height="320" Margin="5,5,5,5" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Visibility="Visible" AutoGenerateColumns="False" SelectionChanged="ListOrders_SelectionChanged">
@@ -110,19 +117,8 @@
                         <Button Content="Оплачен" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Margin="5" FontWeight="Bold" FontSize="15"/>
                     </Grid>
                 </StackPanel>
-                
+
                 <Label x:Name="innfoOrder"  Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Content="Цена заказа: "  Foreground="White" FontSize="20" FontWeight="Bold"/>
-                <Button 
-                    Content="Сохранить"
-                    FontSize="20"
-                    Grid.Row="3"
-                    Grid.Column="4"
-                    Margin="5"
-                    FontWeight="Bold"
-                    VerticalAlignment="Top"
-                    Visibility="Hidden"
-                    x:Name="btnSave"
-                    />
             </Grid>
         </StackPanel>
 
@@ -149,165 +145,165 @@
                 <Label Content="Регистрация пользователя"  Foreground="White" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
 
                 <Label
-                    Content="Имя"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="1"
-                    />
+                Content="Имя"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="1"
+                />
 
                 <TextBox
-                    Grid.Row="1"
-                    Grid.Column="2"
-                    Margin="2"
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    x:Name="firstName_User"
-                    />
+                Grid.Row="1"
+                Grid.Column="2"
+                Margin="2"
+                FontSize="20" 
+                FontWeight="Bold"
+                x:Name="firstName_User"
+                />
 
                 <Label
-                    Content="Фамилия"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="2"
-                    />
+                Content="Фамилия"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="2"
+                />
 
                 <TextBox
-                    Grid.Row="2"
-                    Grid.Column="2"
-                    Margin="2"
-                    FontSize="20" 
-                    FontWeight="Bold"
-                     x:Name="lasttName_User"
-                    />
+                Grid.Row="2"
+                Grid.Column="2"
+                Margin="2"
+                FontSize="20" 
+                FontWeight="Bold"
+                    x:Name="lasttName_User"
+                />
 
                 <Label
-                    Content="Отчество"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="3"
-                    />
+                Content="Отчество"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="3"
+                />
 
                 <TextBox
-                    Grid.Row="3"
-                    Grid.Column="2"
-                    Margin="2"
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    x:Name="middleName_User"
-                    />
+                Grid.Row="3"
+                Grid.Column="2"
+                Margin="2"
+                FontSize="20" 
+                FontWeight="Bold"
+                x:Name="middleName_User"
+                />
 
                 <Label
-                    Content="Логин"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="4"
-                    />
+                Content="Логин"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="4"
+                />
 
                 <TextBox
-                    Grid.Row="4"
-                    Grid.Column="2"
-                    Margin="2"
-                    FontSize="20" 
-                    FontWeight="Bold"
-                     x:Name="login_User"
-                    />
+                Grid.Row="4"
+                Grid.Column="2"
+                Margin="2"
+                FontSize="20" 
+                FontWeight="Bold"
+                    x:Name="login_User"
+                />
 
                 <Label
-                    Content="Пароль"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="5"
-                    />
+                Content="Пароль"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="5"
+                />
 
                 <PasswordBox
-                    Grid.Row="5"
-                    Grid.Column="2"
-                    Margin="2"
-                    FontSize="20" 
-                    FontWeight="Bold"
-                     x:Name="password_User"
-                    />
+                Grid.Row="5"
+                Grid.Column="2"
+                Margin="2"
+                FontSize="20" 
+                FontWeight="Bold"
+                    x:Name="password_User"
+                />
 
                 <Label
-                    Content="Фотография сотрудника"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="6"
-                    />
+                Content="Фотография сотрудника"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="6"
+                />
 
                 <Button
-                    Content="Выбрать"  
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="1"
-                    Grid.Row="6"
-                    Click="view_photo_employee"
-                    />
+                Content="Выбрать"  
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="1"
+                Grid.Row="6"
+                Click="view_photo_employee"
+                />
 
                 <Label
-                    Content="Скан договора"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="7"          
-                    />
+                Content="Скан договора"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="7"          
+                />
 
                 <Button
-                    Content="Выбрать"  
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="1"
-                    Grid.Row="7"
-                    Click="view_photo_contract"
-                    />
+                Content="Выбрать"  
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="1"
+                Grid.Row="7"
+                Click="view_photo_contract"
+                />
 
                 <Label
-                    Content="Роль сотрудника"  
-                    Foreground="White" 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="8"          
-                    />
+                Content="Роль сотрудника"  
+                Foreground="White" 
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="8"          
+                />
 
                 <ComboBox 
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="1"
-                    Grid.Row="8"
-                    x:Name="groupList_User"
-                    />
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="1"
+                Grid.Row="8"
+                x:Name="groupList_User"
+                />
 
                 <Button
-                    Content="Создать"  
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="0"
-                    Grid.Row="10"
-                    Click="create_user_btn"
-                    />
+                Content="Создать"  
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="0"
+                Grid.Row="10"
+                Click="create_user_btn"
+                />
 
                 <Button
-                    Content="Отмена"  
-                    FontSize="20" 
-                    FontWeight="Bold"
-                    Grid.Column="1"
-                    Grid.Row="10"
-                    Click="Back_adm_click"
-                    />
+                Content="Отмена"  
+                FontSize="20" 
+                FontWeight="Bold"
+                Grid.Column="1"
+                Grid.Row="10"
+                Click="Back_adm_click"
+                />
 
             </Grid>
         </StackPanel>
@@ -338,28 +334,28 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <Label
-                            Content="Выберите сотрудника"  
-                            Foreground="White"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="1"
-                            Grid.Column="0"
-                            />
+                        Content="Выберите сотрудника"  
+                        Foreground="White"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        />
                         <ComboBox
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            x:Name="ListEmployees_EditUser"
-                            />
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        x:Name="ListEmployees_EditUser"
+                        />
                         <Button
-                            Content="Редактировать пользователя"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="2"
-                            Grid.Column="0"
-                            Grid.ColumnSpan="3" Click="Button_Click_1"
-                            />  
+                        Content="Редактировать пользователя"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="3" Click="Button_Click_1"
+                        />
                     </Grid>
                 </StackPanel>
                 <StackPanel x:Name="EditUserWindow" Visibility="Hidden" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3">
@@ -380,99 +376,99 @@
                         </Grid.RowDefinitions>
 
                         <Label
-                            Content="Имя"  
-                            Foreground="White"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="1"
-                            Grid.Column="0"
-                            />
+                        Content="Имя"  
+                        Foreground="White"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        />
 
                         <TextBox
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            x:Name="editUserFirstName"
-                            />
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        x:Name="editUserFirstName"
+                        />
 
                         <Label
-                            Content="Фамилия"  
-                            Foreground="White"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="2"
-                            Grid.Column="0"
-                            />
+                        Content="Фамилия"  
+                        Foreground="White"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        />
 
                         <TextBox
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="2"
-                            Grid.Column="1"
-                            x:Name="editUserSecondName"
-                            />
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        x:Name="editUserSecondName"
+                        />
 
                         <Label
-                            Content="Отчество"  
-                            Foreground="White"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="3"
-                            Grid.Column="0"
-                            />
+                        Content="Отчество"  
+                        Foreground="White"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        />
 
                         <TextBox
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="3"
-                            Grid.Column="1"
-                            x:Name="editUserMiddleName"
-                            />
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        x:Name="editUserMiddleName"
+                        />
 
                         <Label
-                            Content="Статус"  
-                            Foreground="White"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="4"
-                            Grid.Column="0"
-                            x:Name="StatusNameEdit"
-                            />
+                        Content="Статус"  
+                        Foreground="White"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        x:Name="StatusNameEdit"
+                        />
 
                         <ComboBox
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="4"
-                            Grid.Column="1"
-                            x:Name="listStatusUser"
-                            />
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        x:Name="listStatusUser"
+                        />
 
                         <Image
-                            Grid.Row="5"
-                            Grid.Column="0"
-                            Width="128"
-                            Height="128"
-                            x:Name="imageEmployee"
-                            />
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Width="128"
+                        Height="128"
+                        x:Name="imageEmployee"
+                        />
 
                         <Button
-                            Content="Отмена"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="6"
-                            Grid.Column="0"
-                            Click="cancelEditWindow"
-                            />
+                        Content="Отмена"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="6"
+                        Grid.Column="0"
+                        Click="cancelEditWindow"
+                        />
 
                         <Button
-                            Content="Сохранить"
-                            FontSize="20" 
-                            FontWeight="Bold" 
-                            Grid.Row="6"
-                            Grid.Column="1"
-                            Click="saveEditUser"
-                            />
+                        Content="Сохранить"
+                        FontSize="20" 
+                        FontWeight="Bold" 
+                        Grid.Row="6"
+                        Grid.Column="1"
+                        Click="saveEditUser"
+                        />
 
                     </Grid>
                 </StackPanel>
@@ -498,7 +494,7 @@
                         </Grid.RowDefinitions>
                         <Label Content="Настройка ресторана"  Foreground="White" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
 
-                        <Button x:Name="settingsBtn_backBtn" Content="Вернутся назад" Height="20" Grid.Column="2" HorizontalAlignment="Right"/>
+                        <Button Click="settingsBtn_backBtn" Content="Вернутся назад" Height="20" Grid.Column="2" HorizontalAlignment="Right"/>
 
                         <Label Content="Создание смен"  Foreground="White" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"/>
 
@@ -585,12 +581,114 @@
                         <Label Content="Выберите сотрудника"  Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Right" Grid.Row="1" Grid.Column="0"/>
                         <Label Content="Выберите столик"  Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Right" Grid.Row="2" Grid.Column="0"/>
 
-                        <ComboBox  FontSize="20" FontWeight="Bold" Grid.Row="1" Grid.Column="1" Margin="5"/>
-                        <ComboBox  FontSize="20" FontWeight="Bold" Grid.Row="2" Grid.Column="1" Margin="5"/>
+                        <ComboBox x:Name="adddEmpToTable_ListEmp" FontSize="20" FontWeight="Bold" Grid.Row="1" Grid.Column="1" Margin="5"/>
+                        <ComboBox x:Name="adddEmpToTable_ListTables"  FontSize="20" FontWeight="Bold" Grid.Row="2" Grid.Column="1" Margin="5"/>
 
-                        <Button Content="Назначить" FontSize="25" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5"/>
+                        <Button Content="Назначить" Click="adddEmpToTable_SetEmpToTable" FontSize="25" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" Margin="5"/>
                     </Grid>
                 </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer x:Name="windowReports" Visibility="Hidden">
+            <StackPanel Width="800" Background="#264EC4">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Label Content="Создание отчётов"  Foreground="White" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+                    <Button Click="windowReports_backBtn" Content="Вернутся назад" Height="20" Grid.Column="2" HorizontalAlignment="Right"/>
+
+                    <Label Content="Отчёт о заказах, полученных от клиентов" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="1" Grid.Column="0"  Grid.ColumnSpan="2"/>
+
+                    <DataGrid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="10" x:Name="reportOrders" AutoGenerateColumns="False" Width="auto">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding DateOrder}" />
+                            <DataGridTextColumn Header="Столик" Binding="{Binding TableName}" />
+                            <DataGridTextColumn Header="Статус готовности" Binding="{Binding ReadyStatus}" />
+                            <DataGridTextColumn Header="Статус оплаты" Binding="{Binding PaymentStatus}" />
+                            <DataGridTextColumn Header="Метод оплаты" Binding="{Binding PaymentMethod}" />
+
+                            <!-- Define columns for the nested Dishes collection -->
+                            <DataGridTemplateColumn Header="Блюда">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding Dishes}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding NameDish}" />
+                                                        <TextBlock Text="{Binding Count}" />
+                                                        <!-- Add more bindings as needed -->
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Итоговая стоимость" Binding="{Binding TotalOrderPrice}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <StackPanel Grid.Row="3" Grid.Column="2">
+                        <Button Content="Выгрузить Excel" Click="exportReportOne" Margin="10"/>
+                        <Button Content="Выгрузить PDF" Click="exportReportOne1" Margin="10"/>
+                    </StackPanel>
+
+                    <Separator Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" FontWeight="Bold" Background="White" VerticalAlignment="Top" Margin="5"/>
+
+                    <Label Content="Отчёт о оплаченных заказах" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="6" Grid.Column="0"  Grid.ColumnSpan="2"/>
+                    <DataGrid x:Name="reportOrdersTwo" AutoGenerateColumns="False" Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="3" Margin="10">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Дата" Binding="{Binding DateOrder}" />
+                            <DataGridTextColumn Header="Столик" Binding="{Binding TableName}" />
+                            <DataGridTextColumn Header="Статус готовности" Binding="{Binding ReadyStatus}" />
+                            <DataGridTextColumn Header="Статус оплаты" Binding="{Binding PaymentStatus}" />
+                            <DataGridTextColumn Header="Метод оплаты" Binding="{Binding PaymentMethod}" />
+
+                            <!-- Define columns for the nested Dishes collection -->
+                            <DataGridTemplateColumn Header="Блюда">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ItemsControl ItemsSource="{Binding Dishes}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding NameDish}" />
+                                                        <TextBlock Text="{Binding Count}" />
+                                                        <!-- Add more bindings as needed -->
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Итоговая стоимость" Binding="{Binding TotalOrderPrice}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Label x:Name="totalPricePaid" Content="Итоговая выручка: " Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Right" Grid.Row="8" Grid.Column="0"  Grid.ColumnSpan="2"/>
+                    <StackPanel Grid.Row="9" Grid.Column="2" Orientation="Horizontal">
+                        <Button Content="Выгрузить PDF" Click="exportReportTwo" Margin="10"/>
+                        <Button Content="Выгрузить Excel" Click="exportReportTwo1" Margin="10"/>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </ScrollViewer>
     </Grid>

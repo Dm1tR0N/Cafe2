@@ -45,7 +45,6 @@ public partial class PostgresContext : DbContext
     public virtual DbSet<WorkersShift> WorkersShifts { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=2583");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -234,6 +233,8 @@ public partial class PostgresContext : DbContext
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("IDTypeWorksShift");
             entity.Property(e => e.WorkingRate).HasColumnType("money");
+            entity.Property(e => e.StartWorksShift).HasColumnType("timestamp with time zone");
+            entity.Property(e => e.EndWorksShift).HasColumnType("timestamp with time zone");
         });
 
         modelBuilder.Entity<User>(entity =>

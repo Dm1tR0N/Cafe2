@@ -7,9 +7,9 @@ public partial class TypeWorksShift
 {
     public int IdtypeWorksShift { get; set; }
 
-    public DateTime Start { get; set; }
+    public DateTime StartWorksShift { get; set; }
 
-    public DateTime End { get; set; }
+    public DateTime EndWorksShift { get; set; }
 
     public decimal WorkingRate { get; set; }
 

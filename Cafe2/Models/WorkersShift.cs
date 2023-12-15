@@ -11,8 +11,6 @@ public partial class WorkersShift
 
     public int IdtypeWorkShift { get; set; }
 
-    public DateTime dateWorkersShift { get; set; }
-
     public virtual User IduserNavigation { get; set; } = null!;
 
     public virtual TypeWorksShift IdworkersShiftNavigation { get; set; } = null!;
