@@ -21,6 +21,8 @@ using PdfSharpCore.Drawing;
 using PdfSharpCore.Pdf;
 using PdfSharpCore.Fonts;
 using PdfSharpCore.Utils;
+using System.Linq;
+using System.Windows.Documents;
 
 namespace Cafe2
 {
@@ -82,6 +84,8 @@ namespace Cafe2
         public static List<OrderReport> orderReports { get; set; }
         public static List<OrderReport> orderReportsPaid { get; set; }
 
+        public static List<Order> orderSave { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -109,7 +113,7 @@ namespace Cafe2
                    var user = _dbContext.Users.FirstOrDefault(u => u.Login == strLogin.Text && u.Password == strPassword.Text);
                    userData = user;
 
-                    if (user.Idgroup == 1)
+                    if (user.Idgroup == 1) // Админ
                     {
                         // Пользователь успешно аутентифицирован
                         //InfoLabel.Content = $"Добро пожаловать!";
@@ -135,25 +139,92 @@ namespace Cafe2
 
                         // Теперь присваиваем данные к ItemsSource вашего DataGrid
                         ListOrders.ItemsSource = query;
-                    }
+                    } 
                     else if (user.Idgroup == 2)
                     {
-                        //InfoLabel.Content = "Добро пожаловать Оффициант";
+
+
+                        var TypeShiftNow = dbContext.TypeWorksShifts
+                            .Join(
+                                dbContext.WorkersShifts,
+                                typeShift => typeShift.IdtypeWorksShift,
+                                workerShift => workerShift.IdtypeWorkShift,
+                                (typeShift, workerShift) => new { TypeShift = typeShift, WorkerShift = workerShift }
+                            )
+                            .OrderBy(x => x.TypeShift.StartWorksShift)
+                            .FirstOrDefault(x => x.TypeShift.StartWorksShift.Date == DateTime.UtcNow.Date);
+
+                        if (TypeShiftNow != null)
+                        {
+                            MessageBox.Show("Смена на сегодня есть", "Информация");
+                            LoginWin.Visibility = Visibility.Hidden;
+                            ServersWindow.Visibility = Visibility.Visible;
+
+                            // Загрузите данные из DbSet в локальный список
+                            var tablesList = dbContext.Tables.OrderBy(x => x.Idtable).ToList();
+
+                            // Привяжите локальные данные к элементу управления
+                            cook_Listtables.ItemsSource = tablesList.Select(x => x.NameTable).ToList();
+
+
+                            cook_ListMenu.ItemsSource = dbContext.Menus
+                                .Select(x => x.NameDish).ToList();
+
+                            var qwe = dbContext.Orders
+                                .Where(x => x.DateOrder.Date == DateTime.UtcNow.Date)                               
+                                .ToList();
+
+                            cook_ListOrderNotPay.ItemsSource = qwe.Select(x => ConvertUtcToTimeZone(x.DateOrder));
+
+                        }
+                        else
+                        {
+                            MessageBox.Show("У вас нет смен на сегодня нет", "Информация");
+                        }
                     }
-                    else if (user.Idgroup == 3)
+                    else if (user.Idgroup == 3) // Повар
                     {
-                        //InfoLabel.Content = "Добро пожаловать Повар";
+                        LoginWin.Visibility = Visibility.Hidden;
+                        CookWindow.Visibility = Visibility.Visible;
+                        var Orders = dbContext.Orders
+                            .Include(order => order.DishInOrders)
+                                .ThenInclude(dishInOrder => dishInOrder.IddishNavigation)
+                            .Include(order => order.IdtableNumberNavigation)
+                            .Include(order => order.IdreadyStatusNavigation)
+                            .Include(order => order.IdpaymentStatusNavigation)
+                            .Include(order => order.IdpaymentMethodNavigation)
+                            //.Where(order => order.IdpaymentStatus == 2)
+                            .AsEnumerable()
+                            .Select(order => new OrderReport
+                            {
+                                DateOrder = order.DateOrder,
+                                TableName = order.IdtableNumberNavigation.NameTable,
+                                ReadyStatus = order.IdreadyStatusNavigation.Name,
+                                PaymentStatus = order.IdpaymentStatusNavigation.Name,
+                                PaymentMethod = order.IdpaymentMethodNavigation.Name,
+                                Dishes = order.DishInOrders.Select(dishInOrder => new DishReport
+                                {
+                                    NameDish = dishInOrder.IddishNavigation.NameDish,
+                                    Count = dishInOrder.Count,
+                                    DishPrice = dishInOrder.IddishNavigation.Price,
+                                    TotalDishPrice = dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price
+                                }).ToList(),
+                                TotalOrderPrice = order.DishInOrders.Sum(dishInOrder => dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price)
+                            })
+                            .ToList();
+
+                        listOrderInPorcess.ItemsSource = Orders;
+                        listOrdersInProcessComboBox.ItemsSource = Orders.Select(x => x.DateOrder).ToList();
                     }
                     else if (user == null)
                     {
-                        //InfoLabel.Content = "пользователь не найден!";
                         strLogin.Text = "";
                         strPassword.Text = "";
+                        MessageBox.Show("Пользователь не найден","Ошибка авторизации!");
                     }
                     else
                     {
-                        // Неверные учетные данные
-                        //InfoLabel.Content = "Неверный логин или пароль.";
+                        MessageBox.Show("Непредвиденная ошибка", "Ошибка авторизации!");
                         strLogin.Text = "";
                         strPassword.Text = "";
                     }
@@ -626,9 +697,17 @@ namespace Cafe2
 
                 var idTypeWorkShift = dbContext.TypeWorksShifts
                     .AsEnumerable()
-                    .FirstOrDefault(x => $"{x.StartWorksShift} - {x.EndWorksShift}: {x.WorkingRate}" == setEmptoWorkShifr_WorkShift.Text);
+                    .FirstOrDefault(x => $"{ConvertUtcToTimeZone(x.StartWorksShift)} - {ConvertUtcToTimeZone(x.EndWorksShift)}: {x.WorkingRate}" == setEmptoWorkShifr_WorkShift.Text);
 
-                if (idUser != null && idTypeWorkShift != null && idTypeWorkShift.StartWorksShift > DateTime.UtcNow)
+                // Получаем текущую дату
+                DateTime currentDate = DateTime.Now;
+
+                // Получаем дату, до которой администратор может формировать смены (5 дней вперёд от текущей даты)
+                DateTime maxShiftDate = true ? currentDate.AddDays(5) : currentDate;
+
+                DateTime startWorksShift = ConvertUtcToTimeZone(idTypeWorkShift.StartWorksShift);
+
+                if (idUser != null && idTypeWorkShift != null && startWorksShift < maxShiftDate)
                 {
                     WorkersShift newString = new WorkersShift()
                     {
@@ -648,10 +727,17 @@ namespace Cafe2
                 }
                 else
                 {
-                    MessageBox.Show("Эту смену нельзя выбрать!\nСмена просрочена", "Ошибка!");
+                    MessageBox.Show("Эту смену нельзя выбрать!", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
 
+        }
+
+        public static DateTime ConvertUtcToTimeZone(DateTime utcDateTime)
+        {
+            TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+            DateTime localDateTime = TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, localTimeZone);
+            return localDateTime;
         }
 
         private void openSettingsWindow(object sender, RoutedEventArgs e)
@@ -660,11 +746,12 @@ namespace Cafe2
             {
                 using (var dbContext = new PostgresContext())
                 {
+                    DateTime utcDateTime = DateTime.UtcNow;
                     AdminPanel.Visibility = Visibility.Hidden;
                     settingsBtn.Visibility = Visibility.Visible;
 
                     setEmptoWorkShifr_WorkShift.ItemsSource = dbContext.TypeWorksShifts
-                        .Select(x => $"{x.StartWorksShift} - {x.EndWorksShift}: {x.WorkingRate}")
+                        .Select(x => $"{ConvertUtcToTimeZone(x.StartWorksShift)} - {ConvertUtcToTimeZone(x.EndWorksShift)}: {x.WorkingRate}")
                         .ToList();
 
                     setEmptoWorkShifr_Employee.ItemsSource = dbContext.Users
@@ -691,7 +778,7 @@ namespace Cafe2
         {
            using(var dbContext = new PostgresContext())
            {
-                Table table = new Table();
+                //Table table = new Table();
 
                 var idUser = dbContext.Users
                    .AsEnumerable()
@@ -847,6 +934,7 @@ namespace Cafe2
             ExportToExcel(orderReportsPaid, totalPaidAmount);
         }
 
+        // Метод для выгрузки в Excel
         private void ExportToExcel(List<OrderReport> data)
         {
             using (var package = new ExcelPackage())
@@ -901,6 +989,7 @@ namespace Cafe2
             }
         }
 
+        // Метод для выгрузки в PDF с общей стоимостью всех заказов
         private void ExportToPdf(List<OrderReport> data)
         {
             var saveFileDialog = new SaveFileDialog
@@ -967,6 +1056,7 @@ namespace Cafe2
             }
         }
 
+        // Метод для выгрузки в Excel с общей стоимостью всех заказов
         private void ExportToExcel(List<OrderReport> data, decimal totalPaidAmount)
         {
             // Создаем диалоговое окно для выбора места сохранения файла
@@ -1107,7 +1197,170 @@ namespace Cafe2
                 }
             }
         }
+        // Дальше Функционал повара //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        private void CookWindow_updateOrder_Click(object sender, RoutedEventArgs e)
+        {
+            Order order1 = new Order();
+            using (var dbContext = new PostgresContext())
+            {
+                var selectedDateTime = Convert.ToDateTime(listOrdersInProcessComboBox.Text);
+                var selectedUtcDateTime = DateTime.SpecifyKind(selectedDateTime, DateTimeKind.Utc);
 
+                var order = dbContext.Orders
+                    .FirstOrDefault(x => x.DateOrder == selectedUtcDateTime);
+
+                var status = dbContext.ReadyStatuses.FirstOrDefault(x => x.Name == ReadyStatusList.Text);
+
+                order.IdreadyStatus = status.IdreadyStatus;
+                dbContext.SaveChanges();
+
+                var OrdersUpd = dbContext.Orders
+                            .Include(order => order.DishInOrders)
+                                .ThenInclude(dishInOrder => dishInOrder.IddishNavigation)
+                            .Include(order => order.IdtableNumberNavigation)
+                            .Include(order => order.IdreadyStatusNavigation)
+                            .Include(order => order.IdpaymentStatusNavigation)
+                            .Include(order => order.IdpaymentMethodNavigation)
+                            //.Where(order => order.IdpaymentStatus == 2)
+                            .AsEnumerable()
+                            .Select(order => new OrderReport
+                            {
+                                DateOrder = order.DateOrder,
+                                TableName = order.IdtableNumberNavigation.NameTable,
+                                ReadyStatus = order.IdreadyStatusNavigation.Name,
+                                PaymentStatus = order.IdpaymentStatusNavigation.Name,
+                                PaymentMethod = order.IdpaymentMethodNavigation.Name,
+                                Dishes = order.DishInOrders.Select(dishInOrder => new DishReport
+                                {
+                                    NameDish = dishInOrder.IddishNavigation.NameDish,
+                                    Count = dishInOrder.Count,
+                                    DishPrice = dishInOrder.IddishNavigation.Price,
+                                    TotalDishPrice = dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price
+                                }).ToList(),
+                                TotalOrderPrice = order.DishInOrders.Sum(dishInOrder => dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price)
+                            })
+                            .ToList();
+                listOrderInPorcess.ItemsSource = null;
+                listOrderInPorcess.ItemsSource = OrdersUpd;
+
+                MessageBox.Show("Заказ обновлен!", "Успешно");
+            };
+        }
+
+        private void CookWindow_back_Click(object sender, RoutedEventArgs e)
+        {
+            LoginWin.Visibility = Visibility.Visible;
+            CookWindow.Visibility = Visibility.Hidden;
+        }
+
+        // Далее функционал Оффицианта //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public static DateTime idOrder;
+        
+        private void cook_addProductInOrder(object sender, RoutedEventArgs e)
+        {
+            using(var dbContext = new PostgresContext())
+            {
+                DishInOrder dishInOrder = new DishInOrder();
+                var idTable = dbContext.Tables.FirstOrDefault(x => x.NameTable == cook_Listtables.Text).Idtable;
+                var idDish = dbContext.Menus.FirstOrDefault(x => x.NameDish == cook_ListMenu.Text).Iddish;
+                var idPymentMethod = dbContext.PymentMethods.FirstOrDefault(x => x.Name == cook_pymentMethod.Text).IdpymentMethods;
+
+                DishInOrder newString = new DishInOrder()
+                { 
+                    Idorder = dbContext.Orders.FirstOrDefault(x => x.DateOrder == idOrder).Idorder,
+                    Iddish = idDish,
+                    Count = Convert.ToInt32(cook_countDish.Text),
+                };
+                dbContext.DishInOrders.Add(newString);
+                dbContext.SaveChanges();
+            };
+        }
+
+        private void cook_addOrder(object sender, RoutedEventArgs e)
+        {
+            using (var dbContext = new PostgresContext())
+            {
+                var idTable = dbContext.Tables.FirstOrDefault(x => x.NameTable == cook_Listtables.Text).Idtable;
+                //var idDish = dbContext.Menus.FirstOrDefault(x => x.NameDish == cook_ListMenu.Text).Iddish;
+                var idPymentMethod = dbContext.PymentMethods.FirstOrDefault(x => x.Name == cook_pymentMethod.Text).IdpymentMethods;
+
+                Order newOrder = new Order()
+                {
+                    IdtableNumber = idTable,
+                    DateOrder = DateTime.UtcNow,
+                    IdreadyStatus = 2,
+                    IdpaymentStatus = 2,
+                    IdpaymentMethod = idPymentMethod,
+                    Ammount = Convert.ToInt32(cook_CountClients.Text)
+                };
+                dbContext.Orders.Add(newOrder);
+                idOrder = newOrder.DateOrder;
+                dbContext.SaveChanges();
+            };
+        }
+
+        private void cook_updateList(object sender, RoutedEventArgs e)
+        {
+            using (var dbContext = new PostgresContext())
+            {
+                var orders = dbContext.Orders
+                    .Include(order => order.DishInOrders)
+                        .ThenInclude(dishInOrder => dishInOrder.IddishNavigation)
+                    .Include(order => order.IdtableNumberNavigation)
+                    .Include(order => order.IdreadyStatusNavigation)
+                    .Include(order => order.IdpaymentStatusNavigation)
+                    .Include(order => order.IdpaymentMethodNavigation)
+                    .AsEnumerable() // Преобразуем IQueryable в IEnumerable
+                    .Where(x => x.DateOrder.Date == DateTime.UtcNow.Date)
+                    .Select(order => new OrderReport
+                    {
+                        DateOrder = order.DateOrder,
+                        TableName = order.IdtableNumberNavigation.NameTable,
+                        ReadyStatus = order.IdreadyStatusNavigation.Name,
+                        PaymentStatus = order.IdpaymentStatusNavigation.Name,
+                        PaymentMethod = order.IdpaymentMethodNavigation.Name,
+                        Dishes = order.DishInOrders.Select(dishInOrder => new DishReport
+                        {
+                            NameDish = dishInOrder.IddishNavigation.NameDish,
+                            Count = dishInOrder.Count,
+                            DishPrice = dishInOrder.IddishNavigation.Price,
+                            TotalDishPrice = dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price
+                        }).ToList(),
+                        TotalOrderPrice = order.DishInOrders.Sum(dishInOrder => dishInOrder.Count * (decimal)dishInOrder.IddishNavigation.Price)
+                    })
+                    .ToList();
+
+                // Обновите DataGrid
+                getOrderList.ItemsSource = orders;
+                orderReports = orders;
+            }
+        }
+
+        private void cook_UptPymentStatus(object sender, RoutedEventArgs e)
+        {
+            using(var dbContext = new PostgresContext())
+            {
+                if (cook_ListOrderNotPay.Text != null)
+                {
+                    var order = dbContext.Orders
+                    .AsEnumerable()
+                    .FirstOrDefault(x => ConvertUtcToTimeZone(x.DateOrder).Second == ConvertUtcToTimeZone(Convert.ToDateTime(cook_ListOrderNotPay.Text)).Second);
+
+                    order.IdpaymentStatus = 1;
+                    dbContext.SaveChanges();
+                }
+                else
+                {
+                    MessageBox.Show("Выбери заказ","Ошибка!");
+                }
+            };
+        }
+
+        private void cook_exportPdf(object sender, RoutedEventArgs e)
+        {
+            ExportToPdf(orderReports);
+        }
     }
 }

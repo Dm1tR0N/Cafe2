@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Cafe2.Models;
 
-public partial class ReadyStatus
+public partial class ReadyStatusList
 {
     public int IdreadyStatus { get; set; }
 

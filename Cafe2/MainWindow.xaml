@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Cafe2"
         mc:Ignorable="d"
-        Title="Кафе" Height="470" Width="800">
+        Title="Кафе" Height="500" Width="1000">
     <Grid Background="#145799">
 
         <!--Авторизация-->
@@ -646,7 +646,7 @@
                         </DataGrid.Columns>
                     </DataGrid>
 
-                    <StackPanel Grid.Row="3" Grid.Column="2">
+                    <StackPanel Grid.Row="3" Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">
                         <Button Content="Выгрузить Excel" Click="exportReportOne" Margin="10"/>
                         <Button Content="Выгрузить PDF" Click="exportReportOne1" Margin="10"/>
                     </StackPanel>
@@ -684,12 +684,171 @@
                         </DataGrid.Columns>
                     </DataGrid>
                     <Label x:Name="totalPricePaid" Content="Итоговая выручка: " Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Right" Grid.Row="8" Grid.Column="0"  Grid.ColumnSpan="2"/>
-                    <StackPanel Grid.Row="9" Grid.Column="2" Orientation="Horizontal">
+                    <StackPanel Grid.Row="9" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Content="Выгрузить PDF" Click="exportReportTwo" Margin="10"/>
                         <Button Content="Выгрузить Excel" Click="exportReportTwo1" Margin="10"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>
         </ScrollViewer>
+
+        <StackPanel x:Name="CookWindow" Visibility="Hidden" Margin="10,0,10,0">
+            <ScrollViewer>
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Label Content="Просмотр заказов, принятых от клиентов"  Foreground="White" FontSize="20" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,5,0,0"/>
+
+                        <Label Content="Изменения статуса"  Foreground="White" FontSize="20" FontWeight="Bold" Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="2" Margin="10,5,0,0"/>
+
+                        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="3">
+                            <Label Content="Заказ"  Foreground="White" FontSize="20" FontWeight="Bold"/>
+                            <ComboBox x:Name="listOrdersInProcessComboBox"/>
+                            <Label Content="Статус"  Foreground="White" FontSize="20" FontWeight="Bold"/>
+                            <ComboBox x:Name="ReadyStatusList">
+                                <TextBlock Text="Готовится"/>
+                                <TextBlock Text="Готов"/>
+                            </ComboBox>
+                            <Button Content="Обновить" x:Name="CookWindow_updateOrder" Margin="0,5,0,0" Click="CookWindow_updateOrder_Click"/>
+                            <Button Content="Назад" x:Name="CookWindow_back" Margin="0,5,0,0" Click="CookWindow_back_Click"/>
+                        </StackPanel>
+
+                        <DataGrid x:Name="listOrderInPorcess" AutoGenerateColumns="False" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="10" ScrollViewer.CanContentScroll="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Дата" Binding="{Binding DateOrder}" />
+                                <DataGridTextColumn Header="Столик" Binding="{Binding TableName}" />
+                                <DataGridTextColumn Header="Статус готовности" Binding="{Binding ReadyStatus}" />
+                                <DataGridTextColumn Header="Статус оплаты" Binding="{Binding PaymentStatus}" />
+                                <DataGridTextColumn Header="Метод оплаты" Binding="{Binding PaymentMethod}" />
+
+                                <!-- Define columns for the nested Dishes collection -->
+                                <DataGridTemplateColumn Header="Блюда">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <ItemsControl ItemsSource="{Binding Dishes}">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel>
+                                                            <TextBlock Text="{Binding NameDish}" />
+                                                            <TextBlock Text="{Binding Count}" />
+                                                            <!-- Add more bindings as needed -->
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Итоговая стоимость" Binding="{Binding TotalOrderPrice}" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+
+        <StackPanel x:Name="ServersWindow" Visibility="Hidden" Margin="10,0,10,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+
+                <Label Content="Принять заказ"  Foreground="White" FontSize="20" HorizontalAlignment="Center" FontWeight="Bold" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="10,5,0,0"/>
+
+                <Label Content="Столик"  Foreground="White" FontSize="20" FontWeight="Bold" Grid.Row="1" Grid.Column="0" Margin="10,5,0,0"/>
+                <ComboBox Grid.Row="1" Grid.Column="1" Margin="5" x:Name="cook_Listtables"/>
+
+                <Label Content="Клиентов"  Foreground="White" FontSize="20" FontWeight="Bold" Grid.Row="2" Grid.Column="0" Margin="10,5,0,0"/>
+                <TextBox x:Name="cook_CountClients" FontWeight="Bold" Grid.Row="2" Grid.Column="1" Margin="5"/>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2">
+                    <Label Content="Способ оплаты" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                    <ComboBox MinWidth="150" Margin="5" x:Name="cook_pymentMethod">
+                        <TextBlock Text="Наличные"/>
+                        <TextBlock Text="Карта"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical" Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2">
+                    <Label Content="Дабовление товара к заказу" Foreground="White" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Товар" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                        <ComboBox x:Name="cook_ListMenu"  MinWidth="93"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Количество" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                        <TextBox x:Name="cook_countDish" Width="50"/>
+                    </StackPanel>
+                    
+                    <Button Click="cook_addProductInOrder" Content="Добавить" HorizontalAlignment="Center" MinWidth="150" Margin="5"/>
+                </StackPanel>
+                
+                <Button Click="cook_addOrder" Content="Принять заказ" HorizontalAlignment="Center" MinWidth="150" Margin="5" Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2"/>
+
+                <Label Content="Принятые заказы"  Foreground="White" FontSize="20" HorizontalAlignment="Center" FontWeight="Bold" Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Margin="10,5,0,0"/>
+
+                <StackPanel Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                    <Label Content="Заказ" Foreground="White" FontSize="15" FontWeight="Bold"/>
+                    <ComboBox x:Name="cook_ListOrderNotPay" MinWidth="100"/>
+                    <Button Click="cook_UptPymentStatus" Content="Оплачен"/>
+                </StackPanel>
+
+                <Button Click="cook_exportPdf"  Content="Отчёт" HorizontalAlignment="Right" FontWeight="Bold" Grid.Row="8" Grid.Column="3" Margin="10"/>
+                <Button Click="cook_updateList"  Content="Обновить список" HorizontalAlignment="Right" FontWeight="Bold" Grid.Row="0" Grid.Column="3" Margin="10"/>
+                <DataGrid x:Name="getOrderList" AutoGenerateColumns="False" Grid.Row="1" Grid.RowSpan="7" Grid.Column="2" Grid.ColumnSpan="3" Margin="10">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Дата" Binding="{Binding DateOrder}" />
+                        <DataGridTextColumn Header="Столик" Binding="{Binding TableName}" />
+                        <DataGridTextColumn Header="Статус готовности" Binding="{Binding ReadyStatus}" />
+                        <DataGridTextColumn Header="Статус оплаты" Binding="{Binding PaymentStatus}" />
+                        <DataGridTextColumn Header="Метод оплаты" Binding="{Binding PaymentMethod}" />
+
+                        <!-- Define columns for the nested Dishes collection -->
+                        <DataGridTemplateColumn Header="Блюда">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ItemsControl ItemsSource="{Binding Dishes}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding NameDish}" />
+                                                    <TextBlock Text="{Binding Count}" />
+                                                    <!-- Add more bindings as needed -->
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Итоговая стоимость" Binding="{Binding TotalOrderPrice}" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </StackPanel>
     </Grid>
 </Window>

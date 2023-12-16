@@ -27,7 +27,7 @@ public partial class Order
 
     public virtual PymentStatus IdpaymentStatusNavigation { get; set; } = null!;
 
-    public virtual ReadyStatus IdreadyStatusNavigation { get; set; } = null!;
+    public virtual ReadyStatusList IdreadyStatusNavigation { get; set; } = null!;
 
     public virtual Table IdtableNumberNavigation { get; set; } = null!;
 }

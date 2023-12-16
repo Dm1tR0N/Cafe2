@@ -32,7 +32,7 @@ public partial class PostgresContext : DbContext
 
     public virtual DbSet<PymentStatus> PymentStatuses { get; set; }
 
-    public virtual DbSet<ReadyStatus> ReadyStatuses { get; set; }
+    public virtual DbSet<ReadyStatusList> ReadyStatuses { get; set; }
 
     public virtual DbSet<Table> Tables { get; set; }
 
@@ -194,7 +194,7 @@ public partial class PostgresContext : DbContext
             entity.Property(e => e.Name).HasColumnType("character varying");
         });
 
-        modelBuilder.Entity<ReadyStatus>(entity =>
+        modelBuilder.Entity<ReadyStatusList>(entity =>
         {
             entity.HasKey(e => e.IdreadyStatus).HasName("ReadyStatus_pkey");
 
